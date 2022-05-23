@@ -1,0 +1,161 @@
+---
+title: "A3 Data Visualization (Incarceration): Epic Hewan Aaron"
+---
+
+## **Introduction**
+
+Incarceration and the prison system in itself have been points of contention for many years. Data suggests that incarceration disproportionally affects people of color in the United States, with Black populations being the most affected. This is likely the result of biases present in policing and the criminal justice system. Political activists like Angela Davis have advocated for "decarceration," which advocates for the abolition of the prison-state as whole. The Vera Institute's large collection of incarceration data can help us understand the varying trends in incarceration between races within the U.S.
+
+I have decided to focus on comparing and contrasting incarceration statistics of Black and white people in the United States.
+
+## 5 relevant values of interest
+
+*What county had the highest jail admission rate for 2018?*
+
+Los Angeles County, CA had the highest jail admission rate in 2018 with 307,177 people admitted.
+
+*What is the average number of Black and white populations incarcerated in U.S. counties as of 2018?*
+
+On average, there were 84 Black people and 117 white people incarcerated in a single U.S. county in 2018.
+
+*Which location had the highest Black, Latinx, and white populations incarcerated in 2018?*
+
+The county with the highest Black and Latinx populations incarcerated in 2018 was Los Angeles County, CA. Maricopa County, AZ had the highest incarcerated white population.
+
+What is the highest recorded Native incarcerated population? What county?
+
+425 in 2007 in Maricopa County, AZ.
+
+*What is the highest incarceration rate recorded for Black, Latinx and White populations? Where is it located and in what year?*
+
+All the highest incarceration rates for Black, Latinx and white populations were recorded in 1993.
+
+Black population: 13,144 in Los Angeles County, CA
+
+Latinx population: 16,595 in Los Angeles County, CA
+
+White population: 7037 in Los Angeles County, CA
+
+## Trends Over Time Chart: Black, Latinx, and White jail population trends from 1990-2018 in LA County
+
+### Why I chose this chart and what patterns I found:
+
+I decided to delve deeper into the incarceration trends of Los Angeles County, California after seeing that it was the county that had the highest incarceration populations for Latinx, Black and white people. According to the LA Almanac, Los Angeles County is the largest county in the United States. Similarly, it has the largest total population for a single county in the U.S. As a result, I wanted to explore the incarceration trends from before their peak incarceration year (1993) onward. Although LA county's incarceration population has generally decreased, the trend is maintained. Latinx people constitute the highest percentage of incarcerated people in LA county, followed by Black and white.
+
+```{r, echo= FALSE, message = FALSE}
+incarceration <- read.csv("https://raw.githubusercontent.com/vera-institute/incarceration-trends/master/incarceration_trends.csv")
+
+#Loading Packages
+
+library(ggplot2)
+
+library(usmap)
+
+library(stringr)
+
+library(dplyr)
+
+
+counties_with_state <- incarceration %>%
+  select(year,state,county_name,total_jail_pop, total_jail_adm, latinx_pop_15to64, black_pop_15to64, white_pop_15to64, black_jail_pop, latinx_jail_pop, white_jail_pop)%>%
+  mutate(location=paste0(county_name, ",", state))
+
+
+counties_with_state <- na.omit(counties_with_state)
+
+
+counties_with_state <- subset(counties_with_state, year!= "1970" & year!= "1971" & year!= "1972" & year!="1973" & year!= "1974" & year!="1975" & year!= "1976" & year!= "1977" & year!= "1978" & year!= "1979" & year!="1980" & year!="1981" & year!="1982" & year!="1983" & year!="1984" & year!="1985" & year!= "1986" & year!="1987" & year!="1988" & year!="1989")
+LA_county_df <- counties_with_state%>%
+  filter(location == "Los Angeles County,CA")
+
+
+
+
+# Basic line plot with points
+
+ ggplot(LA_county_df, aes(x =year)) +
+  geom_line(aes(y = black_jail_pop, color = "black_jail_pop")) +
+  geom_line(aes(y = latinx_jail_pop, color = "latinx_jail_pop")) +
+  geom_line(aes(y = white_jail_pop, color = "white_jail_pop")) +
+  ggtitle("Incarceration Population for Black, Latinx, and White people in LA County Jail from 1993-2018") +
+  scale_color_manual(name = "Race",
+                     labels = c("Black jail pop ", "Latinx jail pop", "White jail pop"),
+                     values = c("red", "green", "blue"))+
+  xlab("")+
+  scale_y_continuous("Incarceration Number")
+
+
+
+
+
+```
+
+## Variable Comparison: Black, Latinx, and White Jail Populations
+
+### Why I chose this chart and what patterns I found:
+
+```{r echo=FALSE, message=FALSE}
+library(ggplot2)
+library(tidyverse)
+
+incarceration <- read.csv("https://raw.githubusercontent.com/vera-institute/incarceration-trends/master/incarceration_trends.csv")
+
+race_jail_df <- incarceration %>%
+select(year, black_jail_pop, white_jail_pop, latinx_jail_pop)%>%
+  group_by(year)%>%
+  summarise(n=n(), across(where(is.numeric), ~ sum(.x, na.rm=TRUE)))%>%
+  gather("key", "value", -c(year,n))
+
+ggplot(race_jail_df, aes(x=year, y=value, group=key, fill=key))+
+  geom_col()+
+  ggtitle("Black, Latinx and White Jail Population Comparison")+
+  scale_fill_discrete(labels=c("Black Jail Population", "White Jail Population", "Latinx Jail Population"))
+
+```
+
+## Map: Black Incarceration Statistics in U.S. States
+
+### Why I chose this chart and what patterns I found:
+
+I decided to create a map of the U.S. based on the incarceration Black jail population in each U.S. state. After focusing on LA county for the initial time trends chart, I wanted to see how the rest of the U.S. compared to California. Evidently, Texas, Florida, Louisiana, and Georgia all have higher Black populations in jail. This might be the result of the higher general Black population in the southern part of the U.S. in comparison to states like Montana, Idaho, Wyoming, etc.
+
+```{r echo=FALSE}
+
+#Loading
+library(dplyr)
+library(usmap)
+library(ggplot2)
+
+#Refining dataframes
+
+incarceration <- read.csv("https://raw.githubusercontent.com/vera-institute/incarceration-trends/master/incarceration_trends.csv")
+
+counties_with_state <- incarceration %>%
+  select(year,state,county_name, total_jail_pop, black_jail_pop, latinx_jail_pop, white_jail_pop)%>%
+  mutate(location=paste0(county_name, ",", state))
+
+counties_with_state <- na.omit(counties_with_state)
+
+
+counties_with_state <- subset(counties_with_state, year!= "1970" & year!= "1971" & year!= "1972" & year!="1973" & year!= "1974" & year!="1975" & year!= "1976" & year!= "1977" & year!= "1978" & year!= "1979" & year!="1980" & year!="1981" & year!="1982" & year!="1983" & year!="1984" & year!="1985" & year!= "1986" & year!="1987" & year!="1988" & year!="1989" & year!="1990" & year!= "1991" & year!="1992")
+
+
+
+black_pop_df <- counties_with_state %>%
+   select(year, state, county_name, black_jail_pop, location)%>%
+filter(year== "2018")
+
+
+summary_table <- black_pop_df %>%
+  group_by(state) %>%
+  summarize("total_black_jail_pop" = sum(black_jail_pop), na.rm=TRUE)
+
+ plot_usmap(data= summary_table, values = "total_black_jail_pop")+
+  scale_fill_continuous(low="white", high="red", name = "incarceration rate")+
+  ggtitle("Black Incarceration Population by U.S. State, 2018")
+
+```
+
+#### References
+
+Los Angeles Almanac. Retrieved from <http://www.laalmanac.com/crime/cr25b.php>.
